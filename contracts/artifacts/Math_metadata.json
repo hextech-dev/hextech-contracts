@@ -1,0 +1,37 @@
+{
+	"compiler": {
+		"version": "0.5.16+commit.9c3226ce"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [],
+		"devdoc": {
+			"methods": {}
+		},
+		"userdoc": {
+			"methods": {}
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"contracts/pancakePair.sol": "Math"
+		},
+		"evmVersion": "istanbul",
+		"libraries": {},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"contracts/pancakePair.sol": {
+			"keccak256": "0xd79394024d6471ad4513dac8a32029dc9e6936f51b0a017612a200021c72ee70",
+			"urls": [
+				"bzz-raw://7079f43909044517352be8eb15e1a66330e08b5c80a206501d3af5ad9d569082",
+				"dweb:/ipfs/QmdL1LWhojXdVg2uNxHAxgHkcCpiH9tQYQdqDMwWrtmFBR"
+			]
+		}
+	},
+	"version": 1
+}
