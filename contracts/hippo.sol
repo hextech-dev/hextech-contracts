@@ -1556,6 +1556,7 @@ pragma solidity 0.6.12;
 interface IBearChef {
 
     struct UserInfo {
+        
         uint balance;
         uint pending;
         uint rewardPaid;

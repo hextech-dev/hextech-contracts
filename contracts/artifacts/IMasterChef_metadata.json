@@ -606,11 +606,11 @@
 			]
 		},
 		"contracts/autoCompound.sol": {
-			"keccak256": "0x36222ae29d288a0fd09b4f3df4c07cc9dde403addca4fa212bbe6d433a185ed0",
+			"keccak256": "0x90c78ccb8f8898b9f56b5feeaee1d1a40dc11672c560c21c26dada7a0c740391",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://065eac7d25167451a7b9133c65e6c29f4293d598b33cf941f8e763fca4917ae5",
-				"dweb:/ipfs/QmVAD53rBUUUraQHSFazFFcEySgntFJ9rBGTecnVqN5LF2"
+				"bzz-raw://c64ea0856f46d64ff63763c5e17af1a7733198ea0fad3429b011e0eec0f8491e",
+				"dweb:/ipfs/QmYFoe1BL3MjAhaYY3tWe1YBaGFRURa74YT1MdaVyfncUv"
 			]
 		}
 	},
