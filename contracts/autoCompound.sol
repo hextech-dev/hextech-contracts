@@ -207,30 +207,30 @@ interface PancakePair {
 }
 
 interface IUserVault {
-    function depositLP(uint256 _pid, uint256 _amount) public payable;
+    function depositLP(uint256 _pid, uint256 _amount) external view;
 }
 
-contract userVault is Ownable {
+contract UserVault is Ownable {
     IMasterChef private CAKE_MASTER_CHEF;
 
     event Deposited(uint amount);
     event Withdrawn(uint amount);
 
-    constructor(IMasterChef masterChefContract) internal {
+    constructor(IMasterChef masterChefContract) {
        CAKE_MASTER_CHEF = masterChefContract;
     }
 
     function setMasterChef(IMasterChef masterChefContract) public payable onlyOwner {
-       CAKE_MASTER_CHEF = IMasterChef(_addr);
+       CAKE_MASTER_CHEF = masterChefContract;
     }
 
-    function depositLP(uint256 _pid, uint256 _amount) public payable whenNotPaused {
+    function depositLP(uint256 _pid, uint256 _amount) public payable onlyOwner {
         require(_amount > 0, "Amount is negative");
         CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Deposited(_amount);
     }
 
-    function harvest(uint256 _pid, uint256 _amount) public payable whenNotPaused {
+    function harvest(uint256 _pid, uint256 _amount) public payable onlyOwner {
         require(_amount > 0, "Amount is negative");
         CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Withdrawn(_amount);
@@ -244,6 +244,7 @@ contract userVault is Ownable {
 contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
     mapping (address => uint) public lpDeposited;
     mapping (address => UserVault) public userVaults;
+    address[] public vaults;
 
     IMasterChef private CAKE_MASTER_CHEF = IMasterChef(0x9a80c493665A4B3B5e163c0bb42EDF5327532595);
     address private fee_receiver = owner();
@@ -251,7 +252,7 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
     event Deposit(address indexed sender, uint amount);
     event Harvest(address indexed sender, uint amount);
 
-    constructor() internal {
+    constructor() {
 
     }
 
@@ -272,6 +273,10 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
         return CAKE_MASTER_CHEF.cake();
     }
 
+    function getVaults() public view returns(address[] memory){
+        return vaults;
+    }
+
     function setPaused(bool _paused) public onlyOwner {
         if(_paused){
             _pause();
@@ -284,10 +289,11 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
         require(_amount > 0, "Amount is negative");
         lpDeposited[msg.sender] = lpDeposited[msg.sender] + _amount;
         //If vault doesn't exists create it
-        if(userVaults[msg.sender] == 0){
+        if(address(userVaults[msg.sender]) == address(0)){
             userVaults[msg.sender] = new UserVault(CAKE_MASTER_CHEF);
+            vaults.push(address(userVaults[msg.sender]));
         }
-        userVaults[msg.sender].deposit(_pid, _amount);
+        //userVaults[msg.sender].deposit(_pid, _amount);
         emit Deposit(msg.sender, _amount);
     }
 
