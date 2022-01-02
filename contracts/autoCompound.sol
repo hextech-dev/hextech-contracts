@@ -4,6 +4,116 @@ pragma solidity 0.8.10;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
+library SafeMath {
+
+  /**
+  * @dev Multiplies two numbers, throws on overflow.
+  */
+  function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+    if (a == 0) {
+      return 0;
+    }
+    uint256 c = a * b;
+    assert(c / a == b);
+    return c;
+  }
+
+  /**
+  * @dev Integer division of two numbers, truncating the quotient.
+  */
+  function div(uint256 a, uint256 b) internal pure returns (uint256) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint256 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
+
+  /**
+  * @dev Subtracts two numbers, throws on overflow (i.e. if subtrahend is greater than minuend).
+  */
+  function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  /**
+  * @dev Adds two numbers, throws on overflow.
+  */
+  function add(uint256 a, uint256 b) internal pure returns (uint256) {
+    uint256 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+}
+
+/**
+ * @title SafeMath32
+ * @dev SafeMath library implemented for uint32
+ */
+library SafeMath32 {
+
+  function mul(uint32 a, uint32 b) internal pure returns (uint32) {
+    if (a == 0) {
+      return 0;
+    }
+    uint32 c = a * b;
+    assert(c / a == b);
+    return c;
+  }
+
+  function div(uint32 a, uint32 b) internal pure returns (uint32) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint32 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
+
+  function sub(uint32 a, uint32 b) internal pure returns (uint32) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  function add(uint32 a, uint32 b) internal pure returns (uint32) {
+    uint32 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+}
+
+/**
+ * @title SafeMath16
+ * @dev SafeMath library implemented for uint16
+ */
+library SafeMath16 {
+
+  function mul(uint16 a, uint16 b) internal pure returns (uint16) {
+    if (a == 0) {
+      return 0;
+    }
+    uint16 c = a * b;
+    assert(c / a == b);
+    return c;
+  }
+
+  function div(uint16 a, uint16 b) internal pure returns (uint16) {
+    // assert(b > 0); // Solidity automatically throws when dividing by 0
+    uint16 c = a / b;
+    // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+    return c;
+  }
+
+  function sub(uint16 a, uint16 b) internal pure returns (uint16) {
+    assert(b <= a);
+    return a - b;
+  }
+
+  function add(uint16 a, uint16 b) internal pure returns (uint16) {
+    uint16 c = a + b;
+    assert(c >= a);
+    return c;
+  }
+}
+
 interface IMasterChef {
     event Deposit(address indexed user, uint256 indexed pid, uint256 amount);
     event EmergencyWithdraw(
@@ -225,12 +335,12 @@ contract UserVault is Ownable {
     }
 
     function depositLP(uint256 _pid, uint256 _amount) public payable onlyOwner {
-        require(_amount > 0, "Amount is negative");
-        CAKE_MASTER_CHEF.deposit(_pid, _amount);
+        //Approve spending
+        //CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Deposited(_amount);
     }
 
-    function harvest(uint256 _pid, uint256 _amount) public payable onlyOwner {
+    function harvestLP(uint256 _pid, uint256 _amount) public payable onlyOwner {
         require(_amount > 0, "Amount is negative");
         CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Withdrawn(_amount);
@@ -242,11 +352,15 @@ contract UserVault is Ownable {
 }
 
 contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
+      using SafeMath for uint256;
+
     mapping (address => uint) public lpDeposited;
     mapping (address => UserVault) public userVaults;
+    mapping (uint => mapping (address => uint)) public userInfo;
+
     address[] public vaults;
 
-    IMasterChef private CAKE_MASTER_CHEF = IMasterChef(0x9a80c493665A4B3B5e163c0bb42EDF5327532595);
+    IMasterChef private CAKE_MASTER_CHEF = IMasterChef(0x891e1d912d4825D1cC329181d07cDFcee2a0FF76);
     address private fee_receiver = owner();
 
     event Deposit(address indexed sender, uint amount);
@@ -287,21 +401,28 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
 
     function deposit(uint256 _pid, uint256 _amount) public payable whenNotPaused {
         require(_amount > 0, "Amount is negative");
-        lpDeposited[msg.sender] = lpDeposited[msg.sender] + _amount;
-        //If vault doesn't exists create it
-        if(address(userVaults[msg.sender]) == address(0)){
-            userVaults[msg.sender] = new UserVault(CAKE_MASTER_CHEF);
-            vaults.push(address(userVaults[msg.sender]));
-        }
-        //userVaults[msg.sender].deposit(_pid, _amount);
+        userInfo[_pid][msg.sender] = userInfo[_pid][msg.sender] + _amount;
+        CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Deposit(msg.sender, _amount);
     }
 
-    function harvestableCake(uint _pid, address _addr) public view returns(uint){
-        return CAKE_MASTER_CHEF.pendingCake(_pid, _addr);
+    function harvestable(uint _pid, address _addr) public view returns(uint){
+        (address lpToken, uint allocPoint, uint lastRewardBlock, uint accCakePerShare) = CAKE_MASTER_CHEF.poolInfo(_pid);
+        uint cakePerBlock = CAKE_MASTER_CHEF.cakePerBlock();
+        uint256 lpSupply = PancakePair(lpToken).balanceOf(address(CAKE_MASTER_CHEF));
+        if (block.number > lastRewardBlock && lpSupply != 0) {
+            uint256 multiplier = CAKE_MASTER_CHEF.getMultiplier(lastRewardBlock, block.number);
+            uint256 cakeReward = multiplier.mul(cakePerBlock).mul(allocPoint).div(CAKE_MASTER_CHEF.totalAllocPoint());
+            accCakePerShare = accCakePerShare.add(cakeReward.mul(1e12).div(lpSupply));
+        }
+        return userInfo[_pid][_addr].mul(accCakePerShare).div(1e12);
     }
+    
 
     function harvest(uint _pid, uint _amount) public payable whenNotPaused {
+        uint maxHarvestable = harvestable(_pid, msg.sender);
+        require(_amount <= maxHarvestable);
+        userInfo[_pid][msg.sender] = userInfo[_pid][msg.sender] - _amount;
         CAKE_MASTER_CHEF.withdraw(_pid, _amount);
         emit Harvest(msg.sender, _amount);
     }
