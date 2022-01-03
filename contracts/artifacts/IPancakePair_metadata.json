@@ -424,8 +424,8 @@
 						"type": "uint256"
 					}
 				],
-				"payable": false,
-				"stateMutability": "nonpayable",
+				"payable": true,
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -732,10 +732,10 @@
 	},
 	"sources": {
 		"contracts/pancakePair.sol": {
-			"keccak256": "0xd79394024d6471ad4513dac8a32029dc9e6936f51b0a017612a200021c72ee70",
+			"keccak256": "0xe424436743c56b7f4df7315151f95871c47c79e7ce755bef9b46b695a2ac1dea",
 			"urls": [
-				"bzz-raw://7079f43909044517352be8eb15e1a66330e08b5c80a206501d3af5ad9d569082",
-				"dweb:/ipfs/QmdL1LWhojXdVg2uNxHAxgHkcCpiH9tQYQdqDMwWrtmFBR"
+				"bzz-raw://0bf0d06947141aa55a1b01ed486306e7179e685ec80d61e6df549a4d4b0408a3",
+				"dweb:/ipfs/QmdsLt64Ss6A9nV1N2Y3cwnng2drgNLg6wFBVencrPBVwQ"
 			]
 		}
 	},

@@ -352,11 +352,27 @@ contract UserVault is Ownable {
 }
 
 contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
-      using SafeMath for uint256;
+    using SafeMath for uint256;
+
+    struct UserInfo {
+        uint256 amount;     // How many LP tokens the user has provided.
+        uint256 rewardDebt; // Reward debt. See explanation below.
+        //
+        // We do some fancy math here. Basically, any point in time, the amount of CAKEs
+        // entitled to a user but is pending to be distributed is:
+        //
+        //   pending reward = (user.amount * pool.accCakePerShare) - user.rewardDebt
+        //
+        // Whenever a user deposits or withdraws LP tokens to a pool. Here's what happens:
+        //   1. The pool's `accCakePerShare` (and `lastRewardBlock`) gets updated.
+        //   2. User receives the pending reward sent to his/her address.
+        //   3. User's `amount` gets updated.
+        //   4. User's `rewardDebt` gets updated.
+    }
 
     mapping (address => uint) public lpDeposited;
     mapping (address => UserVault) public userVaults;
-    mapping (uint => mapping (address => uint)) public userInfo;
+    mapping (uint => mapping (address => UserInfo)) public userInfo;
 
     address[] public vaults;
 
@@ -364,7 +380,8 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
     address private fee_receiver = owner();
 
     event Deposit(address indexed sender, uint amount);
-    event Harvest(address indexed sender, uint amount);
+    event Compound(address indexed sender, uint amount);
+    event Withdraw(address indexed sender, uint amount);
 
     constructor() {
 
@@ -401,12 +418,24 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
 
     function deposit(uint256 _pid, uint256 _amount) public payable whenNotPaused {
         require(_amount > 0, "Amount is negative");
-        userInfo[_pid][msg.sender] = userInfo[_pid][msg.sender] + _amount;
+        (address lpToken, uint allocPoint, uint lastRewardBlock, uint accCakePerShare) = CAKE_MASTER_CHEF.poolInfo(_pid);
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        if (user.amount > 0) {
+            uint256 pending = user.amount.mul(accCakePerShare).div(1e12).sub(user.rewardDebt);
+            if(pending > 0) {
+                //safeCakeTransfer(msg.sender, pending);
+            }
+        }
+        if (_amount > 0) {
+            user.amount = user.amount.add(_amount);
+        }
+        user.rewardDebt = user.amount.mul(accCakePerShare).div(1e12);
         CAKE_MASTER_CHEF.deposit(_pid, _amount);
         emit Deposit(msg.sender, _amount);
     }
 
     function harvestable(uint _pid, address _addr) public view returns(uint){
+        UserInfo storage user = userInfo[_pid][_addr];
         (address lpToken, uint allocPoint, uint lastRewardBlock, uint accCakePerShare) = CAKE_MASTER_CHEF.poolInfo(_pid);
         uint cakePerBlock = CAKE_MASTER_CHEF.cakePerBlock();
         uint256 lpSupply = PancakePair(lpToken).balanceOf(address(CAKE_MASTER_CHEF));
@@ -415,16 +444,33 @@ contract farmsAutoCompoundPancakeSwap is Ownable, Pausable {
             uint256 cakeReward = multiplier.mul(cakePerBlock).mul(allocPoint).div(CAKE_MASTER_CHEF.totalAllocPoint());
             accCakePerShare = accCakePerShare.add(cakeReward.mul(1e12).div(lpSupply));
         }
-        return userInfo[_pid][_addr].mul(accCakePerShare).div(1e12);
+        return user.amount.mul(accCakePerShare).div(1e12).sub(user.rewardDebt);
     }
     
 
-    function harvest(uint _pid, uint _amount) public payable whenNotPaused {
-        uint maxHarvestable = harvestable(_pid, msg.sender);
-        require(_amount <= maxHarvestable);
-        userInfo[_pid][msg.sender] = userInfo[_pid][msg.sender] - _amount;
+    function compound(uint _pid) public payable whenNotPaused {
+        uint pendingCake = CAKE_MASTER_CHEF.pendingCake(_pid, address(this));
+        CAKE_MASTER_CHEF.withdraw(_pid, pendingCake);
+        CAKE_MASTER_CHEF.deposit(_pid, pendingCake);
+        //Reset all rewardDebts to 0 for this _pid
+        for (uint i = 0; i < userInfo[_pid].length; i++) {
+            userInfo[_pid][i].rewardDebt = 0;
+        }
+        emit Compound(msg.sender, pendingCake);
+    }
+
+    function withdraw(uint _pid, uint _amount) public payable whenNotPaused {
+        compound(_pid);
+        (address lpToken, uint allocPoint, uint lastRewardBlock, uint accCakePerShare) = CAKE_MASTER_CHEF.poolInfo(_pid);
+        UserInfo storage user = userInfo[_pid][msg.sender];
+        require(user.amount >= _amount, "withdraw: not good");
+        uint256 pending = user.amount.mul(accCakePerShare).div(1e12).sub(user.rewardDebt);
+        if(_amount > 0) {
+            user.amount = user.amount.sub(_amount);
+        }
+        user.rewardDebt = user.amount.mul(accCakePerShare).div(1e12);
         CAKE_MASTER_CHEF.withdraw(_pid, _amount);
-        emit Harvest(msg.sender, _amount);
+        emit Withdraw(msg.sender, _amount);
     }
 
 }

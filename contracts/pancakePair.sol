@@ -52,7 +52,7 @@ interface IPancakePair {
     function price1CumulativeLast() external view returns (uint);
     function kLast() external view returns (uint);
 
-    function mint(address to) external returns (uint liquidity);
+    function mint(address to) external payable returns(uint liquidity);
     function burn(address to) external returns (uint amount0, uint amount1);
     function swap(uint amount0Out, uint amount1Out, address to, bytes calldata data) external;
     function skim(address to) external;
@@ -408,7 +408,7 @@ contract PancakePair is IPancakePair, PancakeERC20 {
     }
 
     // this low-level function should be called from a contract which performs important safety checks
-    function mint(address to) external lock returns (uint liquidity) {
+    function mint(address to) public payable returns (uint liquidity) {
         (uint112 _reserve0, uint112 _reserve1,) = getReserves(); // gas savings
         uint balance0 = IERC20(token0).balanceOf(address(this));
         uint balance1 = IERC20(token1).balanceOf(address(this));

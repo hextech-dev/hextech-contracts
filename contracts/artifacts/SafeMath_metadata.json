@@ -1,30 +1,23 @@
 {
 	"compiler": {
-		"version": "0.8.10+commit.fc410830"
+		"version": "0.5.16+commit.9c3226ce"
 	},
 	"language": "Solidity",
 	"output": {
 		"abi": [],
 		"devdoc": {
-			"kind": "dev",
-			"methods": {},
-			"version": 1
+			"methods": {}
 		},
 		"userdoc": {
-			"kind": "user",
-			"methods": {},
-			"version": 1
+			"methods": {}
 		}
 	},
 	"settings": {
 		"compilationTarget": {
-			"contracts/autoCompound.sol": "SafeMath"
+			"contracts/pancakePair.sol": "SafeMath"
 		},
-		"evmVersion": "london",
+		"evmVersion": "istanbul",
 		"libraries": {},
-		"metadata": {
-			"bytecodeHash": "ipfs"
-		},
 		"optimizer": {
 			"enabled": true,
 			"runs": 200
@@ -32,36 +25,11 @@
 		"remappings": []
 	},
 	"sources": {
-		"@openzeppelin/contracts/access/Ownable.sol": {
-			"keccak256": "0x24e0364e503a9bbde94c715d26573a76f14cd2a202d45f96f52134ab806b67b9",
-			"license": "MIT",
+		"contracts/pancakePair.sol": {
+			"keccak256": "0xe424436743c56b7f4df7315151f95871c47c79e7ce755bef9b46b695a2ac1dea",
 			"urls": [
-				"bzz-raw://e12cbaa7378fd9b62280e4e1d164bedcb4399ce238f5f98fc0eefb7e50577981",
-				"dweb:/ipfs/QmXRoFGUgfsaRkoPT5bxNMtSayKTQ8GZATLPXf69HcRA51"
-			]
-		},
-		"@openzeppelin/contracts/security/Pausable.sol": {
-			"keccak256": "0xe68ed7fb8766ed1e888291f881e36b616037f852b37d96877045319ad298ba87",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://1d491a2ca79dbf44bc02e876e21a5847a2cbcc011188532ad8662cdc1c134a4e",
-				"dweb:/ipfs/QmUQXhSV8ZvHLzfdG89ZNSh1nLrAYyjnNBLznJGwGcwVk8"
-			]
-		},
-		"@openzeppelin/contracts/utils/Context.sol": {
-			"keccak256": "0x7736c187e6f1358c1ea9350a2a21aa8528dec1c2f43b374a9067465a3a51f5d3",
-			"license": "MIT",
-			"urls": [
-				"bzz-raw://4fd625dca17657403af518cc6c8ab5c54c58898cf6e912ca2e1b0f3194ad0405",
-				"dweb:/ipfs/QmQVv7YeeKmaS11bg7YDTeeGDk6i7sV8LMMfohaLM4SiRu"
-			]
-		},
-		"contracts/autoCompound.sol": {
-			"keccak256": "0x1404e56d7e7c265070724b74280956b733848cc0e9d602dae90a31421c497a68",
-			"license": "UNLICENSED",
-			"urls": [
-				"bzz-raw://fe0358720928f23f305c5bca5af0ba85f6b25732d52ed6b7d3ea05e3060c843a",
-				"dweb:/ipfs/QmfZQneV3Sxrb8v6AYRkKLcRQdFWWNWqd49cB8wk5Y9wen"
+				"bzz-raw://0bf0d06947141aa55a1b01ed486306e7179e685ec80d61e6df549a4d4b0408a3",
+				"dweb:/ipfs/QmdsLt64Ss6A9nV1N2Y3cwnng2drgNLg6wFBVencrPBVwQ"
 			]
 		}
 	},
